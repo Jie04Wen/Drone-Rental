@@ -4,15 +4,21 @@
 
 # 技术栈
 前端：Vue 3、Vite 5、Element Plus、Echarts
+
 后端：Python 3.11、FastAPI 0.116、Uvicorn REST API、OpenAPI、SSE 和 WebSocket。
+
 数据库：MySQL
+
 AI 模型接口：deepseek-v4-flash
+
 支持支付接口：alipay
+
 安全技术：JWT、BCrypt、CORS、限流……
 
 # 目标
 项目业务原型参考开源仓库：[Drone-Rental-System](https://github.com/springmeng/Drone-Rental-System)
-⚠️ 重要说明：原项目采用Java开发，本项目基于Python独立重构实现，未复用原项目源代码，仅借鉴无人机租赁业务流程与系统需求设计思路。
+
+⚠️ 重要说明：原型采用Java开发，本项目基于Python独立重构实现，未复用原项目源代码，仅借鉴无人机租赁业务流程与系统需求设计思路。
 
 项目目标：
 1. 梳理并优化租赁、归还、运维、结算等无人机租赁完整业务闭环，修复原型缺陷，完善系统功能；
