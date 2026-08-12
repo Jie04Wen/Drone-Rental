@@ -5,6 +5,8 @@
 
 更多功能边学习边添加。 😜
 
+![image](md-images/show.png)
+
 # 技术栈
 前端：Vue 3、Vite 5、Element Plus、Echarts
 
