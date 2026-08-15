@@ -106,11 +106,47 @@ AI 模型接口：deepseek-v4-flash
 ===========================================================
 
 2026/08/15
+
 1. 更新设备浏览状态展示，默认列表现在展示所有已上架设备，包括可租赁、缺货和维护中的设备。
 
    关键技术：Vue
 
-2. 
+2. 分析 MCP、DeepSeek Chat Completions API、Function/Tool Calling 和 RAGFlow 的职责与调用流程。
+   
+   DeepSeek Chat Completions API 负责模型推理；Function Calling 负责让模型选择工具；MCP 负责标准化工具发现与调用；RAGFlow 负责知识库检索增强。
+
+3. 建立符合标准的 Streamable HTTP MCP 服务
+
+   关键技术：使用 官方 Python MCP SDK、FastMCP、Streamable HTTP、Bearer Token、DNS Rebinding 防护、Host/Origin 白名单，在 /mcp/ 暴露标准 MCP 服务。
+
+4. 在 MCP 内部调用中安全传递当前业务用户身份。
+
+   关键技术：后端 MCP Client 使用 短期 JWT 用户上下文 Token和 MCP _meta 元数据传递 user_id、会话 ID；MCP Server 验证签名后执行用户订单、资质、空域等个性化查询。
+
+5. 使用 MCP Inspector 进行完整 MCP 验证流程。
+
+   关键技术：使用 MCP Inspector 检查 tools/list 和 tools/call，Vue AI 助手验证端到端问答，管理端 AI 工具日志核对工具名、参数、输出和耗时；通过错误 MCP 地址进行故障注入，确认系统没有静默回退。
+
+6. 优化全部 7 个 AI/MCP 工具的描述、参数 Schema 和执行逻辑。
+
+7. 优化无人机型号模糊匹配，并避免短品牌词误选具体设备。
+
+   关键技术：实现 文本归一化、大小写无关匹配、空格和分隔符清理、SQL 部分匹配及中英文品牌别名组，使 DJI、dji、大疆、DJI 大疆 和 DJI大疆 能够命中同一品牌。此外，同时匹配多个型号时返回歧义提示，要求用户补充完整型号。
+
+8. 当前发给模型的上下文组成：基础系统提示词和工具规则 + 当前用户重要度最高的 10 条长期记忆（AI 记忆管理） + 会话摘要 + 当前会话最近 10 条记录 + 经过 RAGFlow 增强的当前问题（未来加入）
+
+- 用户记忆：ai_memory，跨会话、手工维护，最多注入 10 条。
+
+- 会话历史：ai_chat_trace，按 session_id 隔离，向模型提供最近 10 条记录。
+
+- 对话摘要：不是模型生成的摘要，而是根据“租赁、故障、资质、价格”和少数 DJI 系列关键词形成的规则摘要。
+
+- RAGFlow：根据当前问题检索最多 3 个知识片段，再附加到当前用户问题中。
+
+===========================================================
+
+2026/08/16
+
 
 
 # 特别说明
