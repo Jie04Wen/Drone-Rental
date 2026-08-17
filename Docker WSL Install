@@ -1,0 +1,55 @@
+# 启动 RAGFlow 前置工作
+
+### 安装 WSL 2
+
+Docker Desktop 推荐使用 WSL 2 后端。
+
+1. 检查 BIOS 虚拟化
+
+打开：任务管理器 → 性能 → CPU → 查看“虚拟化”    ！必须显示：虚拟化：已启用
+
+如果未启用，需要进入 BIOS，开启 Intel VT-x 或 AMD-V/SVM，具体方法网上搜索。
+
+![image](md-images/虚拟化启用图.png)
+
+2. 安装 WSL
+
+以管理员身份打开 PowerShell，执行wsl安装：wsl --install
+
+执行完成后重新启动 Windows。
+
+再次以管理员身份打开 PowerShell，执行：
+- wsl --update
+- wsl --set-default-version 2
+- wsl --version
+
+wsl --version 应当正常显示版本，Docker Desktop 当前要求 WSL 2.1.5 或更高版本。
+
+### 安装 Docker Desktop
+
+进入：![Docker Desktop 官方下载页面](https://docs.docker.com/desktop/setup/install/windows-install/)，下载 Windows x86_64 版本。
+
+Docker 默认直接安装在 C 盘或其他盘符的系统盘，且安装过程中不能选择安装目录，推荐把 Docker 安装在 D 盘或其他非系统盘。以下是方法教程：
+
+1. 下载 Docker 安装包，在安装包所在的文件夹的目录中，输入“cmd”并按回车：
+
+![image](md-images/dockercmd.png)
+
+2. 粘贴以下命令，安装在指定文件夹。其中，DockerDesktop 是软件安装的目录，DockerData 则是软件使用过程中，部署的镜像等所在的目录。
+
+start /w "" "Docker Desktop Installer.exe" install -accept-license --installation-dir="D:\Docker\DockerDesktop" --wsl-default-data-root="D:\Docker\DockerData"
+
+3. 选择推荐的 Per-user installation，安装完成后启动 Docker Desktop。
+
+4. 在 Settings → General 中确认启用了 WSL 2 engine，保持 Linux Containers 模式。正常情况下会自动打开 wsl 的界面。
+
+![image](md-images/dockerwslshow.png)
+
+5. 打开一个新的 PowerShell，执行：
+- docker version
+- docker compose version
+- docker run --rm hello-world
+
+正确输出证明配置成功。
+
+![image](md-images/dockerinstallsuccess.png)
