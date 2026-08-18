@@ -1,18 +1,18 @@
 # Drone-Rental
 一个无人机租赁系统的全栈开发记录 and Vibe Coding.
 
-目前已实现：用户租赁、资质审核、空域备案、支付宝支付、物流状态、归还评价、故障报修、维修工单、实时通知、 AI 智能助手、RAG…… 
+目前已实现：用户租赁、资质审核、空域备案、支付宝支付、物流状态、归还评价、故障报修、维修工单、实时通知、 AI 智能助手、RAGFlow…… 
 
 更多功能边学习边添加。 😜
 
 ![image](md-images/show.png)
 
 # 技术栈
-前端：Vue 3、Vite 5、Element Plus、Echarts
-
-后端：Python 3.11、FastAPI 0.116、Uvicorn REST API、OpenAPI、SSE 和 WebSocket。
-
-数据库：MySQL
+      前端：Vue 3、Vite 5、Element Plus、Echarts
+      
+      后端：Python 3.11、FastAPI 0.116、Uvicorn REST API、OpenAPI、SSE 和 WebSocket。
+      
+      数据库：MySQL
 
 AI 模型接口：deepseek-v4-flash
 
@@ -105,7 +105,7 @@ AI 模型接口：deepseek-v4-flash
 
 ===========================================================
 
-2026/08/15
+2026/08/16
 
 1. 更新设备浏览状态展示，默认列表现在展示所有已上架设备，包括可租赁、缺货和维护中的设备。
 
@@ -135,19 +135,79 @@ AI 模型接口：deepseek-v4-flash
 
 8. 当前发给模型的上下文组成：基础系统提示词和工具规则 + 当前用户重要度最高的 10 条长期记忆（AI 记忆管理） + 会话摘要 + 当前会话最近 10 条记录 + 经过 RAGFlow 增强的当前问题（未来加入）
 
-- 用户记忆：ai_memory，跨会话、手工维护，最多注入 10 条。
-
-- 会话历史：ai_chat_trace，按 session_id 隔离，向模型提供最近 10 条记录。
-
-- 对话摘要：不是模型生成的摘要，而是根据“租赁、故障、资质、价格”和少数 DJI 系列关键词形成的规则摘要。
-
-- RAGFlow：根据当前问题检索最多 3 个知识片段，再附加到当前用户问题中。
+         - 用户记忆：ai_memory，跨会话、手工维护，最多注入 10 条。
+         
+         - 会话历史：ai_chat_trace，按 session_id 隔离，向模型提供最近 10 条记录。
+         
+         - 对话摘要：不是模型生成的摘要，而是根据“租赁、故障、资质、价格”和少数 DJI 系列关键词形成的规则摘要。
+         
+         - RAGFlow：根据当前问题检索最多 3 个知识片段，再附加到当前用户问题中。
 
 ===========================================================
 
-2026/08/16
+2026/08/18
 
+   实现了 RAGFlow 服务的使用。
 
+   RAGFlow 是一款基于深层文档理解的开源 RAG（检索增强生成）引擎。与大语言模型（LLM）结合，它能够提供真实可靠的问答能力，并从各种复杂格式的数据中提供有据可查的引用。<a href="https://ragflow.com.cn/docs" target="_blank">RAGFlow</a>
+
+   说白了，RAGFlow 给大模型装上 “私人资料库查阅功能”，RAG 负责管理你的私有知识库，帮大模型实时查阅你的内部文件，让 AI 基于你提供的资料回答问题，而不是靠它自身的记忆凭空猜想。RAGFlow 属于一种增强模块。
+
+1. 部署 Docker WSL 具体方法见：<a href="docs/Docker WSL Install.txt" target="_blank">Docker WSL Install</a>
+
+   对于 RAGFlow 的设置，采用 SiliconFlow + BGE-M3（主要免费），架构为：
+
+         Vue 前端 → PyCharm：drone-rental-python → Docker Desktop：RAGFlow → SiliconFlow：BAAI/bge-m3 Embedding → DeepSeek V4 Flash：最终回答、工具调用
+
+   ![image](md-images/ragflowembedding.png)
+
+3. RAGFlow 配置管理（由 Pydantic Settings 自动从项目根目录 .env 读取）
+
+         AI_RAGFLOW_ENABLED = 控制是否启用 RAG
+         
+         AI_RAGFLOW_BASE_URL= 配置 RAGFlow API 地址
+         
+         AI_RAGFLOW_API_KEY = 用于 Bearer 鉴权
+         
+         AI_RAGFLOW_DATASET_IDS = 支持一个或多个知识库 ID
+
+4. 获取知识库列表的请求格式：
+{
+  "id": "知识库ID",
+  "name": "知识库名称",
+  "doc_num": 3
+}
+
+5. 知识库检索的请求格式：
+{
+  "question": "用户问题",
+  "dataset_ids": ["知识库ID"],
+  "page": 1,
+  "page_size": 3
+}
+
+6. 构造知识库上下文的方法，检索到的片段会被组合为：
+
+         【知识库参考信息】
+         
+         [1] 第一段检索内容
+         
+         [2] 第二段检索内容
+         
+         [3] 第三段检索内容
+         
+         用户问题: 原始用户问题
+
+然后将增强后的问题发送给 DeepSeek。
+
+关键点：1.RAGFlow 只负责检索。   2.DeepSeek V4 Flash 继续负责最终回答。   3.不需要在 RAGFlow 中配置额外 Chat 模型。   4.普通对话和流式对话都支持 RAG。   5.项目没有用 RAGFlow 查询实时业务数据（避免了把易变化的数据库数据写进向量知识库）。
+
+6. 编写三份独立、适合导入 RAGFlow 的 测试知识文档
+- 操作规则：涵盖注册认证、租赁流程、支付、订单状态、归还退款及故障申报。
+- 设备知识：整理项目实际设备、价格、押金、库存、应用场景、参数解释与选型建议。
+- 大疆无人机操作指南：针对项目中的六款大疆设备整理安全操作、飞行检查、异常处置及机型差异。
+
+![image](md-images/ragflowdatasetshow.png)
 
 # 特别说明
 Code and Vibe Coding Knowledge 正在整理中...
