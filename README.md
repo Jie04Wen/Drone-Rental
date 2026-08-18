@@ -91,15 +91,21 @@ AI 模型接口：deepseek-v4-flash
 
     关键技术：使用**支付宝 RSA2 签名接入 alipay.trade.refund 真实退款接口**，并校验支付宝返回的退款金额；未启用支付宝时使用模拟支付逻辑维护本地支付与退款状态。
 
-14. 支付渠道退款失败时，不更新本地订单、押金、库存和退款状态。
+      这里采用了 **Cloudflare** 隧道进行内网穿透，以此获取公网访问地址，保障支付宝相关功能正常运行，
+
+          终端运行： cloudflared tunnel --url http://localhost:8080
+
+    ![image](md-images/Cloudflare.png)
+
+15. 支付渠道退款失败时，不更新本地订单、押金、库存和退款状态。
 
     关键技术： 采用“**先渠道退款、后本地落库**”的处理顺序。支付渠道抛出异常或返回金额不一致时立即终止事务，不更新订单、押金、支付状态和库存。
 
-15. 同一笔订单不能重复执行提前归还租金退款、押金退款和故障全额退款。
+16. 同一笔订单不能重复执行提前归还租金退款、押金退款和故障全额退款。
 
     关键技术：使用**订单行锁、状态前置条件、押金结算状态以及支付累计退款金额**进行幂等控制，防止重复全额退款、重复押金结算和超额退款。
 
-16. 用户订单详情展示预计或已完成的提前归还租金退款、押金退款和故障全额退款结果。
+17. 用户订单详情展示预计或已完成的提前归还租金退款、押金退款和故障全额退款结果。
 
     关键技术： **后端订单 VO 统一返回**计费天数、未使用天数、租金退款、押金退款、押金扣除和故障全额退款标识；Vue 根据结算状态展示“预计退款”或“已退款”明细。
 
@@ -113,7 +119,7 @@ AI 模型接口：deepseek-v4-flash
 
 2. 分析 MCP、DeepSeek Chat Completions API、Function/Tool Calling 和 RAGFlow 的职责与调用流程。
    
-   DeepSeek Chat Completions API 负责模型推理；Function Calling 负责让模型选择工具；MCP 负责标准化工具发现与调用；RAGFlow 负责知识库检索增强。
+  ** DeepSeek Chat Completions API 负责模型推理；Function Calling 负责让模型选择工具；MCP 负责标准化工具发现与调用；RAGFlow 负责知识库检索增强。**
 
 3. 建立符合标准的 Streamable HTTP MCP 服务
 
@@ -121,15 +127,15 @@ AI 模型接口：deepseek-v4-flash
 
 4. 在 MCP 内部调用中安全传递当前业务用户身份。
 
-   关键技术：后端 MCP Client 使用 短期 JWT 用户上下文 Token和 MCP _meta 元数据传递 user_id、会话 ID；MCP Server 验证签名后执行用户订单、资质、空域等个性化查询。
+   关键技术：后端 MCP Client 使用** 短期 JWT 用户上下文 Token** 和** MCP _meta 元数据**传递 user_id、会话 ID；MCP Server 验证签名后执行用户订单、资质、空域等个性化查询。
 
 5. 使用 MCP Inspector 进行完整 MCP 验证流程。
 
-   关键技术：使用 MCP Inspector 检查 tools/list 和 tools/call，Vue AI 助手验证端到端问答，管理端 AI 工具日志核对工具名、参数、输出和耗时；通过错误 MCP 地址进行故障注入，确认系统没有静默回退。
+   关键技术：使用** MCP Inspector **检查 tools/list 和 tools/call，Vue AI 助手验证端到端问答，管理端 AI 工具日志核对工具名、参数、输出和耗时；通过错误 MCP 地址进行故障注入，确认系统没有静默回退。
 
 6. 优化全部 7 个 AI/MCP 工具的描述、参数 Schema 和执行逻辑。
 
-7. 优化无人机型号模糊匹配，并避免短品牌词误选具体设备。
+7. 优化无人机型号**模糊匹配**，并避免短品牌词误选具体设备。
 
    关键技术：实现 文本归一化、大小写无关匹配、空格和分隔符清理、SQL 部分匹配及中英文品牌别名组，使 DJI、dji、大疆、DJI 大疆 和 DJI大疆 能够命中同一品牌。此外，同时匹配多个型号时返回歧义提示，要求用户补充完整型号。
 
@@ -149,13 +155,13 @@ AI 模型接口：deepseek-v4-flash
 
    实现了 RAGFlow 服务的使用。
 
-   RAGFlow 是一款基于深层文档理解的开源 RAG（检索增强生成）引擎。与大语言模型（LLM）结合，它能够提供真实可靠的问答能力，并从各种复杂格式的数据中提供有据可查的引用。<a href="https://ragflow.com.cn/docs" target="_blank">RAGFlow</a>
+   **RAGFlow** 是一款基于深层文档理解的开源 RAG（检索增强生成）引擎。与大语言模型（LLM）结合，它能够提供真实可靠的问答能力，并从各种复杂格式的数据中提供有据可查的引用。<a href="https://ragflow.com.cn/docs" target="_blank">RAGFlow</a>
 
-   说白了，RAGFlow 给大模型装上 “私人资料库查阅功能”，RAG 负责管理你的私有知识库，帮大模型实时查阅你的内部文件，让 AI 基于你提供的资料回答问题，而不是靠它自身的记忆凭空猜想。RAGFlow 属于一种增强模块。
+   说白了，RAGFlow 给大模型装上 “私人资料库查阅功能”，RAG 负责**管理你的私有知识库**，帮大模型实时查阅你的内部文件，让 AI **基于你提供的资料回答问题**，而不是靠它自身的记忆凭空猜想。RAGFlow 属于一种**增强模块**。
 
 1. 部署 Docker WSL 具体方法见：<a href="docs/Docker WSL Install.txt" target="_blank">Docker WSL Install</a>
 
-   对于 RAGFlow 的设置，采用 SiliconFlow + BGE-M3（主要免费），架构为：
+   对于 RAGFlow 的设置，采用** SiliconFlow + BGE-M3**（主要免费），架构为：
 
          Vue 前端 → PyCharm：drone-rental-python → Docker Desktop：RAGFlow → SiliconFlow：BAAI/bge-m3 Embedding → DeepSeek V4 Flash：最终回答、工具调用
 
