@@ -209,6 +209,8 @@ AI 模型接口：deepseek-v4-flash
 
 ![image](md-images/ragflowdatasetshow.png)
 
+7. RAGFlow 配置的本地方案：Docker Ollama + bge-m3，适合需要完全本地存储数据的场景。
+
 # 特别说明
 Code and Vibe Coding Knowledge 正在整理中...
 
