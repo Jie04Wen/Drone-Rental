@@ -14,11 +14,11 @@
       
       数据库：MySQL
 
-AI 模型接口：deepseek-v4-flash
-
-支持支付接口：alipay
-
-安全技术：JWT、BCrypt、CORS、限流……
+      AI 模型接口：deepseek-v4-flash
+      
+      支持支付接口：alipay
+      
+      安全技术：JWT、BCrypt、CORS、限流……
 
 # 目标
 项目业务原型参考开源仓库：[Drone-Rental-System](https://github.com/springmeng/Drone-Rental-System)
@@ -216,6 +216,10 @@ AI 模型接口：deepseek-v4-flash
 ![image](md-images/ragflowdatasetshow.png)
 
 7. RAGFlow 配置的本地方案：Docker Ollama + bge-m3，适合需要完全本地存储数据的场景。
+
+===========================================================
+
+2026/08/20
 
 # 特别说明
 Code and Vibe Coding Knowledge 正在整理中...
