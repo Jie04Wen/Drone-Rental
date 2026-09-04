@@ -285,7 +285,7 @@
 
 2026/09/02
 
-  接入 Redis：将Redis定位为“可选增强组件”，MySQL仍是业务事实。
+  接入 Redis：使用 redis‑py 封装一个 Redis 工具类 RedisSupport (redis.py) 作为增强组件存在。
 
 - Redis正常时：提供JWT退出失效、登录会话记录、无人机查询缓存、跨实例限流、订单防重和库存操作的分布式互斥。
 - Redis关闭或故障时:原有业务逻辑完全可用，API走MySQL和现有单进程保护逻辑，不因Redis返回500。
