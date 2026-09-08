@@ -337,6 +337,18 @@
   3. 视觉对话接口 + 视觉识别服务 （deepseek解析返回结果）
   4. 制定识别置信度规则 + 无人机推荐（数据库结果匹配）
   5. 实现模型路由（带有图片的聊天则调用 sendVisionMessage(text, image, payload.previewUrl) ）
+  6. 跨刷新恢复图片(持久化“图片对象键 + 聊天消息关联关系”，刷新后由后端重新生成可访问地址，过期仅保留历史占位信息）
+
+            attachments = list(db.scalars(
+                select(AiImageAttachment)
+                .where(
+                    AiImageAttachment.session_id == session_id,
+                    AiImageAttachment.user_id == user_id,
+                    AiImageAttachment.trace_id.in_(
+                        [item.id for item in items]
+                    ),
+                )
+            ).all())
            
 
 # 特别说明
