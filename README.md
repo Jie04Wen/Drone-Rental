@@ -364,11 +364,17 @@
 - 验证 scope 并原子消费 jti
   - /app/ai/mcp.py 的 _verify_internal_user() 中加入：
 
-            if payload["purpose"] != "mcp-tool-user-context":
-                  raise PermissionError("invalid purpose")
-            
-            if payload["scope"] != f"mcp:tool:{tool_name}":
-                  raise PermissionError("scope mismatch")
+        if user_id <= 0:
+            raise ValueError("invalid user id")
+
+        if purpose != "mcp-tool-user-context":
+            raise ValueError("invalid token purpose")
+
+        if not secrets.compare_digest(scope, expected_scope):
+            raise PermissionError("MCP 令牌无权调用当前工具")
+
+        if not jti:
+            raise ValueError("missing jti")
 
 
 
