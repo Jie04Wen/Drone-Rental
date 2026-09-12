@@ -357,6 +357,20 @@
 
 防重放机制的加入：使用 jti + Redis NX 解决同一令牌重复使用；加入 scope 和请求摘要限制令牌被挪作他用。
 
+- 签发令牌时增加 jti 和 scope：
+  - /app/ai/mcp.py 的 _create_user_context_token() 中加入 tool_name 作为 scope，
+  - 使用 "jti": secrets.token_urlsafe(24) 在每次 tools/call 生成不同的 jti
+
+- 验证 scope 并原子消费 jti
+  - /app/ai/mcp.py 的 _verify_internal_user() 中加入：
+
+            if payload["purpose"] != "mcp-tool-user-context":
+                  raise PermissionError("invalid purpose")
+            
+            if payload["scope"] != f"mcp:tool:{tool_name}":
+                  raise PermissionError("scope mismatch")
+
+
 
 
 # 特别说明
