@@ -406,7 +406,30 @@ CREATE TABLE `ai_chat_trace` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI会话追踪表';
 
 -- =====================================================
--- 14. AI 工具调用日志表 (ai_tool_call_log)
+-- 14. AI 对话临时图片附件表 (ai_image_attachment)
+-- 图片对象由后台清理任务在 expires_at 到期后删除，默认保留 24 小时
+-- =====================================================
+DROP TABLE IF EXISTS `ai_image_attachment`;
+CREATE TABLE `ai_image_attachment` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '附件ID',
+    `user_id` BIGINT NOT NULL COMMENT '上传用户ID',
+    `session_id` VARCHAR(64) NOT NULL COMMENT 'AI会话ID',
+    `trace_id` BIGINT DEFAULT NULL COMMENT '关联的用户消息追踪ID',
+    `object_key` VARCHAR(255) NOT NULL COMMENT '本地或MinIO对象键',
+    `original_name` VARCHAR(255) DEFAULT NULL COMMENT '原始文件名',
+    `mime_type` VARCHAR(50) NOT NULL COMMENT '处理后的图片MIME类型',
+    `size_bytes` INT NOT NULL COMMENT '处理后的图片大小（字节）',
+    `expires_at` DATETIME NOT NULL COMMENT '图片过期删除时间',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除状态: 0-未删除, 1-已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_session` (`user_id`, `session_id`),
+    KEY `idx_trace_id` (`trace_id`),
+    KEY `idx_expires_deleted` (`expires_at`, `deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI对话临时图片附件表';
+
+-- =====================================================
+-- 15. AI 工具调用日志表 (ai_tool_call_log)
 -- =====================================================
 DROP TABLE IF EXISTS `ai_tool_call_log`;
 CREATE TABLE `ai_tool_call_log` (
@@ -427,7 +450,7 @@ CREATE TABLE `ai_tool_call_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI工具调用日志表';
 
 -- =====================================================
--- 15. AI 用户记忆与本地知识库表 (ai_memory)
+-- 16. AI 用户记忆与本地知识库表 (ai_memory)
 -- =====================================================
 DROP TABLE IF EXISTS `ai_memory`;
 CREATE TABLE `ai_memory` (
@@ -482,9 +505,9 @@ INSERT INTO `ai_memory` (`user_id`, `memory_key`, `memory_value`, `category`, `i
 INSERT INTO `ai_memory` (`user_id`, `memory_key`, `memory_value`, `category`, `importance`) VALUES
 (0, 'rental_rule_qualification', '租赁无人机前必须完成实名认证。用户需要在个人中心提交飞行资质（如CAAC无人机驾驶员执照），等待管理员审核通过后方可租赁。资质审核通常在1-2个工作日内完成。', 'fact', 10),
 
-(0, 'rental_rule_order_flow', '租赁流程：1.浏览设备 → 2.选择设备和租赁日期 → 3.创建订单 → 4.支付 → 5.等待发货 → 6.确认收货 → 7.使用设备 → 8.归还设备 → 9.评价。订单创建后24小时内未支付将自动取消。', 'fact', 10),
+(0, 'rental_rule_order_flow', '租赁流程：1.浏览设备 → 2.选择设备和租赁日期 → 3.创建订单 → 4.支付 → 5.等待发货 → 6.确认收货 → 7.使用设备 → 8.归还设备 → 9.评价。订单创建后须在30分钟内完成支付，超过30分钟未支付将自动取消。', 'fact', 10),
 
-(0, 'rental_rule_payment', '支付方式支持：支付宝（沙箱环境）和模拟支付。订单创建后需在24小时内完成支付，超时订单自动取消。支付成功后订单状态变为"已支付"，等待商家发货。', 'fact', 9),
+(0, 'rental_rule_payment', '支付方式支持：支付宝、微信和钱包支付。订单创建后须在30分钟内完成支付，超过30分钟未支付将自动取消。支付成功后订单状态变为"已支付"，等待商家发货。', 'fact', 9),
 
 (0, 'rental_rule_cancellation', '订单取消规则：待支付状态的订单可直接取消；已支付未发货的订单可申请退款；已发货的订单不支持取消，需联系客服处理。', 'fact', 9),
 
@@ -530,10 +553,10 @@ INSERT INTO `ai_memory` (`user_id`, `memory_key`, `memory_value`, `category`, `i
 INSERT INTO `ai_memory` (`user_id`, `memory_key`, `memory_value`, `category`, `importance`) VALUES
 (0, 'faq_how_to_rent', '租赁步骤：1.注册账号 → 2.完成实名认证 → 3.浏览设备选择心仪的无人机 → 4.选择租赁日期 → 5.创建订单并支付 → 6.等待发货 → 7.收到设备后确认收货开始使用。', 'fact', 10),
 
-(0, 'faq_payment_methods', '支付方式：目前支持支付宝（沙箱环境）和模拟支付。正式环境将接入微信支付和支付宝正式接口。', 'fact', 8),
+(0, 'faq_payment_methods', '支付方式：目前支持支付宝和模拟支付。正式环境将接入支付宝和微信支付的正式接口。', 'fact', 8),
 
 (0, 'faq_refund_policy', '退款政策：已支付未发货的订单可申请全额退款；已发货未收货的订单需承担运费；已收货的订单不支持退款，可申请退租。', 'fact', 9),
 
 (0, 'faq_damage_policy', '损坏赔偿：设备归还时如有损坏，将根据损坏程度扣除维修费用或押金。人为损坏（如坠落、进水）需承担全部维修费用。建议使用过程中小心操作。', 'fact', 9),
 
-(0, 'faq_contact', '联系方式：如有其他问题，请在系统内使用AI助手咨询，或联系客服。客服工作时间：周一至周五 9:00-18:00。', 'fact', 7);
+(0, 'faq_contact', '联系方式：如有其他问题，请在系统内使用AI助手咨询，或联系客服。人工客服工作时间：周一至周五 9:00-18:00。', 'fact', 7);
