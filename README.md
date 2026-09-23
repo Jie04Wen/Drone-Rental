@@ -1,4 +1,4 @@
-# Drone-Rental
+# 无人机租赁管理与 AI 智能服务系统
 一个无人机租赁系统的全栈开发记录 and Vibe Coding.
 
 目前已实现：用户租赁、资质审核、空域备案、支付宝支付、物流状态、归还评价、故障报修、维修工单、实时通知、JWT、AI agent（deepseek-v4-flash api）、MCP、RAGFlow、minIO…… 
