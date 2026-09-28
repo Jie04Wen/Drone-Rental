@@ -3,7 +3,7 @@
 
 目前已实现：用户租赁、资质审核、空域备案、支付宝支付、物流状态、归还评价、故障报修、维修工单、实时通知、JWT、AI agent（deepseek-v4-flash api）、MCP、RAGFlow、minIO…… 
 
-更多功能边学习边添加。 😜
+更多功能边学习边添加。 
 
 ![image](md-images/show.png)
 
