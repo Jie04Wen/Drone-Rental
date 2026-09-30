@@ -386,9 +386,9 @@
 
 目前项目的框架是基于FastApi，多组件组合自研搭建的：
       
-      - **上层对话与 RAG 层：基于 RAGFlow 开源框架**，处理用户聊天、知识库解析检索，同时充当 MCP Host 客户端；
-      - **工具通信层：基于 MCP 协议，使用官方 MCP SDK 实现 MCP‑Server**；MCP Server 作为胶水，不写数据库逻辑；
-      - **业务能力层：基于 FastAPI 框架**，真正实现库存查询、租金计算这些业务接口；MCP 服务通过 HTTP 调用 FastAPI 获取动态业务数据；
+      - 上层对话与 RAG 层：基于 RAGFlow 开源框架，处理用户聊天、知识库解析检索，同时充当 MCP Host 客户端；
+      - 工具通信层：基于 MCP 协议，使用官方 MCP SDK 实现 MCP‑Server；MCP Server 作为胶水，不写数据库逻辑；
+      - 业务能力层：基于 FastAPI 框架，真正实现库存查询、租金计算这些业务接口；MCP 服务通过 HTTP 调用 FastAPI 获取动态业务数据；
       - 大模型使用 DeepSeek，走 OpenAI 兼容接口。
 
 正在考虑转换为LangChain，将当前实现的大模型、外部知识库、工具 API 等串联起来。
